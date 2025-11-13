@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Garment T&A Planner (2027)</title>
+    <title>Garment T&A Planner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- We now only rely on core Moment.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
@@ -17,10 +17,15 @@
         .card {
             box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
+        /* Color logic for the dates */
         .result-cell {
             font-weight: 600;
-            color: #059669;
+            color: #10b981; /* Emerald 600 - Safe/Planned Green */
         }
+        .text-red-600 { /* Important Constraints/Triggers are highlighted */
+             color: #dc2626; 
+        }
+
         .deadline-header {
             background-color: #0d9488; /* Teal 600 */
         }
@@ -124,10 +129,10 @@
                                 <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase w-[140px] whitespace-normal">Season / Row</th>
                                 <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase w-[140px] whitespace-normal">Customer Delivery Date (CDD)</th>
                                 <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase text-red-600 w-[160px] whitespace-normal">ORDERS DUE DATE (Mon-Fri)</th>
-                                <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase text-red-600 w-[140px] whitespace-normal">ETA / WH USA (60D Cal)</th>
+                                <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase text-red-600 w-[140px] whitespace-normal">ETA / WH USA (14D Cal)</th>
                                 <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase w-[140px] whitespace-normal">Plan Fabric ETD (60D Cal/H)</th>
-                                <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase text-red-600 w-[170px] whitespace-normal">Plan Fab inhouse (30D Cal/H, Sun-Thu)</th>
-                                <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase text-red-600 w-[170px] whitespace-normal">ETD ex-Bdesh (45D Cal/H, Sunday)</th>
+                                <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase text-red-600 w-[170px] whitespace-normal">Plan Fab inhouse (45D Cal/H, Sun-Thu)</th>
+                                <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase text-red-600 w-[170px] whitespace-normal">ETD ex-Bdesh (60D Cal/H, Sunday)</th>
                                 <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase w-[40px] whitespace-normal">Action</th>
                             </tr>
                         </thead>
@@ -159,7 +164,7 @@
                                 <tr>
                                     <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase w-[140px] whitespace-normal">Scenario</th>
                                     <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase w-[140px] whitespace-normal">ORDERS DUE DATE (Mon-Fri Input)</th>
-                                    <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase text-red-600 w-[140px] whitespace-normal">Plan Fabric ETD</th>
+                                    <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase text-red-600 w-[160px] whitespace-normal">Plan Fabric ETD</th>
                                     <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase w-[170px] whitespace-normal">Plan Fab inhouse</th>
                                     <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase w-[170px] whitespace-normal">ETD ex-Bdesh (Sunday)</th>
                                     <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase text-red-600 w-[140px] whitespace-normal">ETA / WH USA</th>
@@ -198,26 +203,28 @@
     </div>
 
     <script>
-        // --- GLOBAL CONFIGS & DEFAULTS ---
+        // --- GLOBAL CONFIGS & DEFAULTS (Moved to top for scope fix) ---
         const DATE_FORMAT = 'YYYY-MM-DD';
         const DISPLAY_FORMAT = 'DD-MMM-YYYY';
 
         // Default Lead Times (Calendar Days / Working Days)
         const DEFAULT_LTS = [
-            { name: "Sea Transit Time", days: 60, type: "calendar" },
-            { name: "Booking Trigger LT", days: 14, type: "working" },
-            { name: "Fabric Lead Time (Mill)", days: 60, type: "calendar_holiday" }, 
-            { name: "Fabric Transit LT", days: 30, type: "calendar_holiday" },      
-            { name: "Garment Production LT", days: 45, type: "calendar_holiday" }, 
+            { name: "CDD to ETA LT", days: 14, type: "calendar" }, // 14D Cal
+            { name: "ETA to ETD LT", days: 60, type: "calendar" }, // 60D Cal
+            { name: "ETD to Fab Inhouse LT", days: 45, type: "calendar_holiday" }, // 45D Cal/H (BD - Eid)
+            { name: "Fab Inhouse to Fab ETD LT", days: 30, type: "calendar" }, // 30D Cal (Sea Transit: NO HOLIDAYS/WEEKENDS)
+            { name: "Fabric ETD to Orders Due LT", days: 60, type: "calendar_holiday" }, // 60D Cal/H (China - CNY/Oct)
         ];
 
         // Default Holiday Blocks (Start/End) - YYYY-MM-DD
         const DEFAULT_HOLIDAYS = [
-            { name: "CNY Mill Closing", start: "2027-01-25", end: "2027-02-25" },
-            { name: "1st Eid Holiday", start: "2027-03-08", end: "2027-03-19" },
-            { name: "2nd Eid Holiday", start: "2027-05-17", end: "2027-05-21" },
-            { name: "Golden October", start: "2027-10-01", end: "2027-10-10" },
+            { name: "CNY Mill Closing", start: "2026-02-03", end: "2026-03-03" },
+            { name: "1st Eid Holiday", start: "2026-03-18", end: "2026-03-29" },
+            { name: "2nd Eid Holiday", start: "2026-05-23", end: "2026-05-31" },
+            { name: "Golden October", start: "2026-10-01", end: "2026-10-10" },
         ];
+        // --- END GLOBAL CONFIGS ---
+
 
         let LTs = JSON.parse(localStorage.getItem('ltSettings')) || DEFAULT_LTS;
         let HOLIDAY_BLOCKS = JSON.parse(localStorage.getItem('holidaySettings')) || DEFAULT_HOLIDAYS;
@@ -246,14 +253,40 @@
 
         // Global holiday set for quick lookup
         let GLOBAL_HOLIDAYS = new Set();
+        let CHINA_HOLIDAYS = new Set();
+        let BD_HOLIDAYS = new Set();
+
         function updateHolidaySet() {
             GLOBAL_HOLIDAYS.clear();
-            const holidayDates = generateHolidayDates(HOLIDAY_BLOCKS);
-            holidayDates.forEach(date => GLOBAL_HOLIDAYS.add(date));
+            CHINA_HOLIDAYS.clear();
+            BD_HOLIDAYS.clear();
+
+            HOLIDAY_BLOCKS.forEach(block => {
+                let start = moment(block.start);
+                let end = moment(block.end);
+                
+                if (start.isValid() && end.isValid()) {
+                    let current = moment(start);
+                    while (current.isSameOrBefore(end)) {
+                        const date = current.format(DATE_FORMAT);
+                        GLOBAL_HOLIDAYS.add(date);
+
+                        // Split holidays for conditional LT use
+                        if (block.name.includes("CNY") || block.name.includes("October")) {
+                            CHINA_HOLIDAYS.add(date);
+                        }
+                        if (block.name.includes("Eid")) {
+                            BD_HOLIDAYS.add(date);
+                        }
+
+                        current.add(1, 'day');
+                    }
+                }
+            });
         }
 
-        // Custom function to subtract/add calendar days, skipping ONLY defined holidays
-        function subtractDaysSkippingHolidays(startDate, daysToSubtract) {
+        // Custom function to subtract/add calendar days, skipping only specified holidays
+        function subtractDaysSkippingHolidays(startDate, daysToSubtract, skipSet) {
             let resultDate = moment(startDate);
             let daysCounted = 0;
             
@@ -263,8 +296,8 @@
             
             while (daysCounted < targetDays) {
                 resultDate.add(step, 'day');
-                // Check if the resulting day is a holiday
-                if (!GLOBAL_HOLIDAYS.has(resultDate.format(DATE_FORMAT))) {
+                // Check if the resulting day is a holiday in the specific set
+                if (!skipSet.has(resultDate.format(DATE_FORMAT))) {
                     daysCounted++;
                 }
             }
@@ -366,25 +399,50 @@
 
         // Helper function to apply LTs based on type
         function applyLTSeparator(startDate, lt) {
+            // Determine which holiday set to use for calendar_holiday
+            let skipSet = new Set();
+            if (lt.name.includes("Fabric ETD to Orders Due") || lt.name.includes("Fab Inhouse to Fab ETD")) { // CNY/Oct Zone
+                skipSet = CHINA_HOLIDAYS;
+            } else if (lt.name.includes("ETD to Fab Inhouse")) { // Eid Zone (BD Production)
+                skipSet = BD_HOLIDAYS;
+            } else if (lt.name.includes("Fab Inhouse to Fab ETD") && lt.type === 'calendar_holiday') { 
+                // Fix: Fab Inhouse to Fab ETD LT is now simple calendar (LT 30)
+                skipSet = new Set(); 
+            } else {
+                 skipSet = new Set(); // No holidays for Sea Transit / Mon-Fri working days
+            }
+
+
             if (lt.type === 'working') {
                 return subtractWorkingDays(startDate, lt.days);
             } else if (lt.type === 'calendar') {
                 return moment(startDate).subtract(lt.days, 'days');
             } else if (lt.type === 'calendar_holiday') {
-                return subtractDaysSkippingHolidays(startDate, lt.days);
+                return subtractDaysSkippingHolidays(startDate, lt.days, skipSet);
             }
             return moment(startDate);
         }
 
         // Helper function to apply FORWARD LTS based on type
         function applyForwardLTSeparator(startDate, lt) {
+            let skipSet = new Set();
+            if (lt.name.includes("Fabric ETD to Orders Due") || lt.name.includes("Fab Inhouse to Fab ETD")) { // CNY/Oct Zone
+                skipSet = CHINA_HOLIDAYS;
+            } else if (lt.name.includes("ETD to Fab Inhouse")) { // Eid Zone (BD Production)
+                skipSet = BD_HOLIDAYS;
+            } else if (lt.name.includes("Fab Inhouse to Fab ETD")) {
+                 skipSet = new Set(); // No holidays for Fab Inhouse to Fab ETD
+            } else {
+                 skipSet = new Set(); // No holidays for Sea Transit / Mon-Fri working days
+            }
+
             if (lt.type === 'working') {
                 return addWorkingDays(startDate, lt.days);
             } else if (lt.type === 'calendar') {
                 return moment(startDate).add(lt.days, 'days');
             } else if (lt.type === 'calendar_holiday') {
                 // Negative subtraction = Addition
-                return subtractDaysSkippingHolidays(startDate, -lt.days); 
+                return subtractDaysSkippingHolidays(startDate, -lt.days, skipSet); 
             }
             return moment(startDate);
         }
@@ -397,61 +455,63 @@
             if (!cdd.isValid()) return {};
 
             // Get all LTs from settings
-            const ltSeaTransit = getLTByName('Sea Transit Time');
-            const ltBooking = getLTByName('Booking Trigger LT');
-            const ltFabricLT = getLTByName('Fabric Lead Time');
-            const ltFabTransit = getLTByName('Fabric Transit LT');
-            const ltGarmentPrd = getLTByName('Garment Production LT');
+            const ltEtaToCdd = getLTByName('CDD to ETA LT'); 
+            const ltEtdToEta = getLTByName('ETA to ETD LT'); 
+            const ltFabInhouseToEtd = getLTByName('ETD to Fab Inhouse LT'); 
+            const ltFabEtdToFabInhouse = getLTByName('Fab Inhouse to Fab ETD LT'); 
+            const ltOrdersDueToFabEtd = getLTByName('Fabric ETD to Orders Due LT'); 
+
 
             // 1. CDD Constraint (Backward - Mon-Fri)
             const cddConstrained = applyMonFriConstraint(cdd);
 
-            // 2. ETA / WH USA (CDD - 60 Calendar Days) - Standard Calendar
-            const etaWhUSAInitial = applyLTSeparator(cddConstrained, ltSeaTransit);
+            // 2. ETA / WH USA (CDD - 14 Calendar Days)
+            const etaWhUSAInitial = applyLTSeparator(cddConstrained, ltEtaToCdd);
             // Apply Mon-Fri Constraint
             const etaWhUSA = applyMonFriConstraint(etaWhUSAInitial);
 
-            // 3. ORDERS DUE DATE (ETA / WH USA - 14 Working Days) - Standard Working
-            let ordersDueDateInitial = applyLTSeparator(etaWhUSA, ltBooking);
-            // Apply Mon-Fri constraint
-            const ordersDueDate = applyMonFriConstraint(ordersDueDateInitial);
-
-            // 4. Plan Fabric ETD (ORDERS DUE DATE - 60 Cal/H Days)
-            const planFabricETD = applyLTSeparator(ordersDueDate, ltFabricLT);
-
-            // 5. Plan Fab inhouse (Plan Fabric ETD - 30 Cal/H Days)
-            const planFabInhouseInitial = applyLTSeparator(planFabricETD, ltFabTransit);
-            // Apply Sun-Thu constraint (Backward)
-            const planFabInhouse = applySunThuConstraint(planFabInhouseInitial, 'backward');
-
-            // 6. ETD ex-Bdesh (Plan Fab inhouse - 45 Cal/H Days)
-            let etdExBdeshInitial = applyLTSeparator(planFabInhouse, ltGarmentPrd);
-
+            // 3. ETD ex-Bdesh (ETA - 60 Cal Days)
+            const etdExBdeshInitial = applyLTSeparator(etaWhUSA, ltEtdToEta);
             // Apply Sunday Constraint
             const etdExBdesh = applySundayConstraint(etdExBdeshInitial);
 
-            // --- Recalculate FORWARD from the constrained ETD ex-Bdesh (Final Schedule) ---
+            // 4. Plan Fab inhouse (ETD - 45 Cal/H Days)
+            const planFabInhouseInitial = applyLTSeparator(etdExBdesh, ltFabInhouseToEtd);
+            // Apply Sun-Thu constraint (Backward)
+            const planFabInhouse = applySunThuConstraint(planFabInhouseInitial, 'backward');
+
+            // 5. Plan Fabric ETD (Fab Inhouse - 30 Cal/H Days)
+            const planFabricETD = applyLTSeparator(planFabInhouse, ltFabEtdToFabInhouse);
+            
+            // 6. ORDERS DUE DATE (Fabric ETD - 60 Cal/H Days)
+            let ordersDueDateInitial = applyLTSeparator(planFabricETD, ltOrdersDueToFabEtd);
+            // Apply Mon-Fri constraint
+            const ordersDueDate = applyMonFriConstraint(ordersDueDateInitial);
+
+
+            // --- Recalculate FORWARD from the constrained ORDERS DUE DATE (Final Schedule) ---
             
             const schedule = {};
-            schedule.ETDBdesh = etdExBdesh;
+            schedule.OrdersDue = ordersDueDate;
+            
+            // Fabric ETD (Orders Due + 60 Cal/H Days)
+            let fabEtdForward = applyForwardLTSeparator(schedule.OrdersDue.format(DATE_FORMAT), ltOrdersDueToFabEtd);
+            schedule.FabricETD = applyMonFriConstraintForward(fabEtdForward); 
 
-            // Fab Inhouse (ETD + 45 Cal/H Days) -> Apply Sun-Thu Constraint (Forward)
-            let fabInhouseForward = applyForwardLTSeparator(schedule.ETDBdesh.format(DATE_FORMAT), ltGarmentPrd); 
+            // Fab Inhouse (Fabric ETD + 30 Cal/H Days) -> Apply Sun-Thu Constraint (Forward)
+            let fabInhouseForward = applyForwardLTSeparator(schedule.FabricETD.format(DATE_FORMAT), ltFabEtdToFabInhouse); 
             schedule.FabInhouse = applySunThuConstraint(fabInhouseForward, 'forward');
 
-            // Fabric ETD (Fab Inhouse + 30 Cal/H Days)
-            schedule.FabricETD = applyForwardLTSeparator(schedule.FabInhouse.format(DATE_FORMAT), ltFabTransit);
+            // ETD ex-Bdesh (Fab Inhouse + 45 Cal/H Days) -> Apply Sunday Constraint (Forward)
+            let etdExBdeshForward = applyForwardLTSeparator(schedule.FabInhouse.format(DATE_FORMAT), ltFabInhouseToEtd);
+            schedule.ETDBdesh = applySundayConstraint(etdExBdeshForward);
             
-            // Orders Due Date (Fabric ETD + 60 Cal/H Days) -> Apply Mon-Fri Constraint (Forward)
-            let ordersDueForward = applyForwardLTSeparator(schedule.FabricETD.format(DATE_FORMAT), ltFabricLT);
-            schedule.OrdersDue = applyMonFriConstraintForward(ordersDueForward);
-            
-            // ETA WH USA (Orders Due Date + 14 Working Days) -> Apply Mon-Fri Constraint (Forward)
-            let etaForward = applyForwardLTSeparator(schedule.OrdersDue.format(DATE_FORMAT), ltBooking);
+            // ETA WH USA (ETD + 60 Calendar Days) -> Apply Mon-Fri Constraint (Forward)
+            let etaForward = applyForwardLTSeparator(schedule.ETDBdesh.format(DATE_FORMAT), ltEtdToEta);
             schedule.ETA = applyMonFriConstraintForward(etaForward);
             
-            // CDD (ETA + 60 Calendar Days) -> Apply Mon-Fri Constraint (Forward)
-            let cddForward = applyForwardLTSeparator(schedule.ETA.format(DATE_FORMAT), ltSeaTransit);
+            // CDD (ETA + 14 Calendar Days) -> Apply Mon-Fri Constraint (Forward)
+            let cddForward = applyForwardLTSeparator(schedule.ETA.format(DATE_FORMAT), ltEtaToCdd);
             schedule.CDD = applyMonFriConstraintForward(cddForward);
 
 
@@ -477,37 +537,37 @@
             if (!ordersDueDateConstrained.isValid()) return {};
 
             // Get all LTs from settings
-            const ltSeaTransit = getLTByName('Sea Transit Time');
-            const ltBooking = getLTByName('Booking Trigger LT');
-            const ltFabricLT = getLTByName('Fabric Lead Time');
-            const ltFabTransit = getLTByName('Fabric Transit LT');
-            const ltGarmentPrd = getLTByName('Garment Production LT');
+            const ltEtaToCdd = getLTByName('CDD to ETA LT');
+            const ltEtdToEta = getLTByName('ETA to ETD LT');
+            const ltFabInhouseToEtd = getLTByName('ETD to Fab Inhouse LT');
+            const ltFabEtdToFabInhouse = getLTByName('Fab Inhouse to Fab ETD LT');
+            const ltOrdersDueToFabEtd = getLTByName('Fabric ETD to Orders Due LT');
 
             const schedule = {};
             
-            // ETD is the fixed constrained point
+            // Orders Due is the fixed constrained point
             schedule.OrdersDue = ordersDueDateConstrained;
             
             // 1. Plan Fabric ETD (Orders Due Date + 60 Cal/H Days)
-            schedule.FabricETD = applyForwardLTSeparator(schedule.OrdersDue.format(DATE_FORMAT), ltFabricLT);
+            schedule.FabricETD = applyForwardLTSeparator(schedule.OrdersDue.format(DATE_FORMAT), ltOrdersDueToFabEtd);
             
             // 2. Plan Fab inhouse (Fabric ETD + 30 Cal/H Days) -> Apply Sun-Thu Constraint (Forward)
-            let fabInhouseInitial = applyForwardLTSeparator(schedule.FabricETD.format(DATE_FORMAT), ltFabTransit);
+            let fabInhouseInitial = applyForwardLTSeparator(schedule.FabricETD.format(DATE_FORMAT), ltFabEtdToFabInhouse);
             schedule.FabInhouse = applySunThuConstraint(fabInhouseInitial, 'forward');
 
             // 3. ETD ex-Bdesh (Fab Inhouse + 45 Cal/H Days)
-            let etdExBdeshInitial = applyForwardLTSeparator(schedule.FabInhouse.format(DATE_FORMAT), ltGarmentPrd);
+            let etdExBdeshInitial = applyForwardLTSeparator(schedule.FabInhouse.format(DATE_FORMAT), ltFabInhouseToEtd);
 
             // Apply Sunday Constraint
             const etdExBdesh = applySundayConstraint(etdExBdeshInitial);
             schedule.ETDBdesh = etdExBdesh;
             
-            // 4. ETA WH USA (ETD + 14 Working Days) -> Apply Mon-Fri Constraint (Forward)
-            let etaForward = applyForwardLTSeparator(schedule.ETDBdesh.format(DATE_FORMAT), ltBooking);
+            // 4. ETA WH USA (ETD + 60 Calendar Days) -> Apply Mon-Fri Constraint (Forward)
+            let etaForward = applyForwardLTSeparator(schedule.ETDBdesh.format(DATE_FORMAT), ltEtdToEta);
             schedule.ETA = applyMonFriConstraintForward(etaForward);
             
-            // 5. Customer Delivery Date (ETA + 60 Calendar Days) -> Apply Mon-Fri Constraint (Forward)
-            let cddForward = applyForwardLTSeparator(schedule.ETA.format(DATE_FORMAT), ltSeaTransit);
+            // 5. Customer Delivery Date (ETA + 14 Calendar Days) -> Apply Mon-Fri Constraint (Forward)
+            let cddForward = applyForwardLTSeparator(schedule.ETA.format(DATE_FORMAT), ltEtaToCdd);
             schedule.CDD = applyMonFriConstraintForward(cddForward);
             
 
@@ -528,7 +588,7 @@
             // Function removed as per user request to remove Gemini section.
         }
 
-        function addRow(defaultSeason = 'Spring 2027', defaultDate = moment().add(200, 'days').format(DATE_FORMAT)) {
+        function addRow(defaultSeason, defaultDate) {
             const rowId = moment().valueOf(); // Unique ID
             dataRows.push({ 
                 id: rowId, 
@@ -545,7 +605,7 @@
             renderTable();
         }
 
-        function addForwardRow(defaultScenario = 'Scenario 1', defaultDate = moment().add(30, 'days').format(DATE_FORMAT)) {
+        function addForwardRow(defaultScenario, defaultDate) {
             const rowId = moment().valueOf(); // Unique ID
             // Ensure default date adheres to Mon-Fri constraint
             let initialDate = moment(defaultDate);
@@ -709,17 +769,18 @@
             
             // If no backward data is loaded, add initial example rows
             if (dataRows.length === 0) {
-                // Example dates for 2027 seasons
-                addRow('Spring 2027', '2027-02-15');
-                addRow('Summer 2027', '2027-05-15');
-                addRow('Fall 2027', '2027-08-15');
-                addRow('Holiday 2027', '2027-11-15');
+                // Example dates based on user's screenshot (2026 data)
+                addRow('Spring 2026', '2026-01-25');
+                addRow('Summer 2026', '2026-04-25');
+                addRow('Fall 2026', '2026-07-25');
+                addRow('Holiday 2026', '2026-10-25');
             }
             
             // If no forward data is loaded, add initial example rows
             if (forwardDataRows.length === 0) {
-                addForwardRow('New Order 1', '2027-02-01');
-                addForwardRow('New Order 2', '2027-04-01');
+                // Example dates based on user's screenshot (2025/2026 data)
+                addForwardRow('New Order 1', '2025-11-27');
+                addForwardRow('New Order 2', '2025-11-20');
             }
             
             updateHolidaySet();
@@ -773,15 +834,24 @@
 
             // Render Holiday Settings
             holidayContainer.innerHTML = HOLIDAY_BLOCKS.map((h, index) => `
-                <div class="flex space-x-2 items-center">
+                <div class="flex space-x-1 items-center">
                     <input type="text" id="hName${index}" value="${h.name}" class="p-2 border rounded w-1/3 text-sm" placeholder="Holiday Name">
                     <input type="date" id="hStart${index}" value="${h.start}" class="p-2 border rounded w-1/3 text-sm" placeholder="Start Date">
                     <input type="date" id="hEnd${index}" value="${h.end}" class="p-2 border rounded w-1/3 text-sm" placeholder="End Date">
+                    <button onclick="deleteHolidayBlock(${index})" class="text-red-500 hover:text-red-700 p-2 text-lg">
+                        &times;
+                    </button>
                 </div>
             `).join('');
 
             // Add button to add more holiday blocks
             holidayContainer.innerHTML += `<button onclick="addHolidayBlock()" class="mt-3 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs py-1 px-3 rounded-md">+ Add Holiday Block</button>`;
+        }
+
+        function deleteHolidayBlock(index) {
+             HOLIDAY_BLOCKS.splice(index, 1);
+             localStorage.setItem('holidaySettings', JSON.stringify(HOLIDAY_BLOCKS));
+             renderSettings(); // Re-render the modal content
         }
 
         function addHolidayBlock() {
