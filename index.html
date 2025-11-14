@@ -128,8 +128,11 @@
                             <tr>
                                 <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase w-[140px] whitespace-normal">Season / Row</th>
                                 <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase w-[140px] whitespace-normal">Customer Delivery Date (CDD)</th>
+                                <!-- NEW POSITION: ETA / WH USA (14D Cal) -->
+                                <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase w-[140px] whitespace-normal">ETA / WH USA (14D Cal)</th>
+                                <!-- NEW POSITION: ORDERS DUE DATE (Mon-Fri) -->
                                 <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase text-red-600 w-[160px] whitespace-normal">ORDERS DUE DATE (Mon-Fri)</th>
-                                <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase text-red-600 w-[140px] whitespace-normal">ETA / WH USA (14D Cal)</th>
+                                
                                 <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase w-[140px] whitespace-normal">Plan Fabric ETD (60D Cal/H)</th>
                                 <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase text-red-600 w-[170px] whitespace-normal">Plan Fab inhouse (45D Cal/H, Sun-Thu)</th>
                                 <th class="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase text-red-600 w-[170px] whitespace-normal">ETD ex-Bdesh (60D Cal/H, Sunday)</th>
@@ -212,7 +215,7 @@
             { name: "CDD to ETA LT", days: 14, type: "calendar" }, // 14D Cal
             { name: "ETA to ETD LT", days: 60, type: "calendar" }, // 60D Cal
             { name: "ETD to Fab Inhouse LT", days: 45, type: "calendar_holiday" }, // 45D Cal/H (BD - Eid)
-            { name: "Fab Inhouse to Fab ETD LT", days: 30, type: "calendar" }, // 30D Cal (Sea Transit: NO HOLIDAYS/WEEKENDS)
+            { name: "Fab Inhouse to Fab ETD LT", days: 30, type: "calendar" }, // 30D Cal (Sea Transit: NO HOLIDAYS/WEEKENDS/CNY/OCT)
             { name: "Fabric ETD to Orders Due LT", days: 60, type: "calendar_holiday" }, // 60D Cal/H (China - CNY/Oct)
         ];
 
@@ -426,12 +429,10 @@
         // Helper function to apply FORWARD LTS based on type
         function applyForwardLTSeparator(startDate, lt) {
             let skipSet = new Set();
-            if (lt.name.includes("Fabric ETD to Orders Due")) { // CNY/Oct Zone
+            if (lt.name.includes("Fabric ETD to Orders Due") || lt.name.includes("Fab Inhouse to Fab ETD")) { // CNY/Oct Zone
                 skipSet = CHINA_HOLIDAYS;
             } else if (lt.name.includes("ETD to Fab Inhouse")) { // Eid Zone (BD Production)
                 skipSet = BD_HOLIDAYS;
-            } else if (lt.name.includes("Fab Inhouse to Fab ETD")) {
-                 skipSet = new Set(); // No holidays for Fab Inhouse to Fab ETD
             } else {
                  skipSet = new Set(); // No holidays for Sea Transit / Mon-Fri working days
             }
@@ -467,8 +468,8 @@
 
             // 2. ETA / WH USA (CDD - 14 Calendar Days)
             const etaWhUSAInitial = applyLTSeparator(cddConstrained, ltEtaToCdd);
-            // Apply Mon-Fri Constraint
-            const etaWhUSA = applyMonFriConstraint(etaWhUSAInitial);
+            // Apply Mon-Fri Constraint HAS BEEN REMOVED (Fixed the ETA error Jan 8 -> Jan 11)
+            const etaWhUSA = etaWhUSAInitial; // No Mon-Fri constraint on ETA
 
             // 3. ETD ex-Bdesh (ETA - 60 Cal Days)
             const etdExBdeshInitial = applyLTSeparator(etaWhUSA, ltEtdToEta);
@@ -699,8 +700,8 @@
                     <td class="px-3 py-3 text-center text-sm border-r w-[140px]">
                         <input type="date" value="${row.inputDate}" onchange="updateDate(${row.id}, this.value)" class="p-1 border rounded text-xs w-full">
                     </td>
+                    <td class="px-3 py-3 text-center text-sm result-cell text-red-600 border-r w-[140px]">${results.ETA}</td>
                     <td class="px-3 py-3 text-center text-sm result-cell text-red-600 border-r w-[160px]">${results.OrdersDue}</td>
-                    <td class="px-3 py-3 text-center text-sm result-cell border-r w-[140px]">${results.ETA}</td>
                     <td class="px-3 py-3 text-center text-sm result-cell border-r w-[140px]">${results.FabricETD}</td>
                     <td class="px-3 py-3 text-center text-sm result-cell text-red-600 border-r w-[170px]">${results.FabInhouse}</td>
                     <td class="px-3 py-3 text-center text-sm result-cell text-red-600 border-r w-[170px]">${results.ETDBdesh}</td>
@@ -895,4 +896,4 @@
         }
     </script>
 </body>
-</html>`
+</html>
