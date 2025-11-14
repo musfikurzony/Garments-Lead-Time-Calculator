@@ -401,11 +401,11 @@
         function applyLTSeparator(startDate, lt) {
             // Determine which holiday set to use for calendar_holiday
             let skipSet = new Set();
-            if (lt.name.includes("Fabric ETD to Orders Due") || lt.name.includes("Fab Inhouse to Fab ETD")) { // CNY/Oct Zone
+            if (lt.name.includes("Fabric ETD to Orders Due")) { // CNY/Oct Zone
                 skipSet = CHINA_HOLIDAYS;
             } else if (lt.name.includes("ETD to Fab Inhouse")) { // Eid Zone (BD Production)
                 skipSet = BD_HOLIDAYS;
-            } else if (lt.name.includes("Fab Inhouse to Fab ETD") && lt.type === 'calendar_holiday') { 
+            } else if (lt.name.includes("Fab Inhouse to Fab ETD")) { 
                 // Fix: Fab Inhouse to Fab ETD LT is now simple calendar (LT 30)
                 skipSet = new Set(); 
             } else {
@@ -426,7 +426,7 @@
         // Helper function to apply FORWARD LTS based on type
         function applyForwardLTSeparator(startDate, lt) {
             let skipSet = new Set();
-            if (lt.name.includes("Fabric ETD to Orders Due") || lt.name.includes("Fab Inhouse to Fab ETD")) { // CNY/Oct Zone
+            if (lt.name.includes("Fabric ETD to Orders Due")) { // CNY/Oct Zone
                 skipSet = CHINA_HOLIDAYS;
             } else if (lt.name.includes("ETD to Fab Inhouse")) { // Eid Zone (BD Production)
                 skipSet = BD_HOLIDAYS;
@@ -895,4 +895,4 @@
         }
     </script>
 </body>
-</html>
+</html>`
